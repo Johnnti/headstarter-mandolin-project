@@ -9,6 +9,7 @@ from pydantic import BaseModel
 import time
 from google import genai 
 from google.genai import types
+import json
 
 load_dotenv()
 class Field(BaseModel):
@@ -108,3 +109,4 @@ output = open("../Input Data/Adbulla/field_info.json", "w+")
 output.write(chat_response.text)
 
 print(chat_response.text)
+ 
