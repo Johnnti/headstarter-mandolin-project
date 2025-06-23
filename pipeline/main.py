@@ -3,16 +3,16 @@ import os
 from mistralai import Mistral
 from dotenv import load_dotenv
 from pathlib import Path
-# from read_pa import read_pa
+from fill_pa import fill_pa
 from pydantic import BaseModel
-from get_pa_fields import get_pa_fields
+# from get_pa_fields import get_pa_fields
 import time
 from google import genai 
 from google.genai import types
 
 load_dotenv()
 class Field(BaseModel):
-    fieldname: str
+    id: str
     value: str
 # class Response(BaseModel):
 #     response: list[Field]
@@ -35,7 +35,11 @@ pdf_path = str(pdf_path.resolve())
 
 #Path to pA pdf
 file_path = script_dir / ".." /"Input Data" /"Adbulla" / "PA.pdf"
-file_path = file_path.resolve()
+fill_pa(file_path)
+
+file_path = script_dir / ".."/"Input Data" /"Adbulla"/"PA_edited.pdf"
+#pass the pdf to the fill_pa file to annotate the widgets in the PA
+
 
 # Getting the base64 string
 base64_pdf = encode_pdf(pdf_path)
@@ -64,13 +68,7 @@ for page in ocr_response.pages:
     prompt += page.markdown
     
 pdf_path = script_dir / ".." /"Input Data" /"Adbulla" / "PA.pdf"
-print(prompt)
-
-# time.sleep(10)
-#extract PA form fields
-PA_field_names = get_pa_fields(pdf_path)    
-print(PA_field_names)
-# time.sleep(10)
+print("Added referral info to prompt")
 
 #query the gemini llm with pa field names and referral package information embedded in instructions and user prompt respectively.
 chat_response = gemini_client.models.generate_content(
@@ -80,7 +78,7 @@ chat_response = gemini_client.models.generate_content(
 
 **Instructions:**
 
-1.  If a field is a checkbox that has to be checked based on information from pdf, the value of the field is Yes otherwise No.
+1.  **Checkboxes:** If a field is a checkbox that has to be checked based on information from pdf, the value of the field is "Yes" otherwise "No". Don't use the field's name as the value
 2.  **Date Format:** All dates should be in MM/DD/YYYY format. If only partial date information is available leave blank the missing ones.
 3.  **Yes/No Fields:** For fields that expect a "Yes" or "No" answer, output "Yes" or "No" explicitly. If the information is not explicitly stated, infer based on the presence or absence of related details, or state "No" if no supporting information is found.
 4.  **Drug Lists:** For sections with lists of drugs, if a drug is mentioned as being used, failed, or causing an adverse reaction, identify that specific drug. If multiple drugs are mentioned for a single choice (e.g., "Riabni (rituximab-arrx) Rituxan (rituximab)"), select only the relevant one.
@@ -88,6 +86,8 @@ chat_response = gemini_client.models.generate_content(
 6.  **"Other" Fields:** If "Other" is a selectable option, provide the specific "Other" value if present in the medical record.
 7.  **Measurements:** Ensure weights are in lbs or kgs and heights in inches or cms, as indicated by the field. Convert if necessary or note if units are different.
 8.  **Empty Fields:** If a field is not found or cannot be inferred from the medical record, leave its value blank. Do not invent information.
+9.  **Field Index:** Every field has a name annotated to it(on top of checkboxes if field is textbox and in the textarea if field is a text area), in your response, use the index as the index field and then the set the value using the information in the medical record as reference. This indices will help a form filling software to find and populate the approriate fields.
+Don't infer the names instead use the names as provided in the document. 
 
 **Extract the corresponding value from the medical record for each field and return them as a list following the schema. The medical record will be supplied in the user prompt:**
             """,
@@ -103,7 +103,7 @@ chat_response = gemini_client.models.generate_content(
         ]
 )
 
-output = open("./field_info.json", "w+")
+output = open("../Input Data/Adbulla/field_info.json", "w+")
 
 output.write(chat_response.text)
 
