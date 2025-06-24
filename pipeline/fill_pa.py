@@ -16,7 +16,7 @@ def fill_pa(file_path):
                 widget.text_fontsize = 5
                 widget.update()
     #save file 
-    doc.save("../Input Data/Adbulla/PA_edited.pdf")
+    doc.save("PA_edited.pdf")
     
     
 # fill_pa("../Input Data/Adbulla/PA.pdf")
