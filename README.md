@@ -7,8 +7,11 @@
     ```bash
     pip install -r pipeline/requirements.txt
     ```
+2. Visit [Mistral API](https://console.mistral.ai/) for Mistral API Key
 
-2.  **Run the Notebook**
+3. Visit [Google API](https://aistudio.google.com/) for Google gemini API Key
+
+4.  **Run the Notebook**
 
     Navigate to the `pipeline` directory and run the Jupyter Notebook:
 
